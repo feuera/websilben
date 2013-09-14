@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, request, render_template, g, redirect, session
+from flask import Flask, request, render_template, g, redirect, session, url_for, flash
 import shelve
 
 from werkzeug.security import generate_password_hash, \
@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash, \
 app = Flask(__name__)
 app.config.update(
         DEBUG=True,
-        SECRET_KEY="mysecrettestkey",
+        SECRET_KEY="mysecrettestkey12_=$",
         )
 
 def getSilben():
@@ -34,13 +34,14 @@ def get_sh():
     if sh is None:
         sh = g._shelve = shelve.open('config.db')
         if not 'users' in sh:
-            admin = {'admin':generate_password_hash('admin')}
+            admin = {'admin':{'pw':generate_password_hash('admin'), 'id':'A'}}
             sh['users'] = admin
-        print(sh['users'])
+            print('add user',sh['users'])
         #if not 'silben' in sh: #test for new silben
         silben = getSilben()
         sh['silben'] = silben
-        #print(sh['silben'])
+    else:
+        print(list(sh.keys()))
     return sh
 
 @app.teardown_appcontext
@@ -49,6 +50,30 @@ def teardown_sh(exception):
     if sh is not None:
         sh.close()
 
+@app.route('/_auth/delT/<name>/')
+def delT(name):
+    sh = get_sh()
+    if name in sh['users'] and name != 'admin':
+        l = sh['users']
+        l.pop(name)
+        sh['users'] = l
+    return redirect(url_for('home'))
+
+@app.route('/_auth/addT/', methods=['GET','POST'])
+def addT():
+    if request.method == 'POST':
+        lname = request.form['lname']
+        password = request.form['password']
+        sh = get_sh()
+        if lname and not lname in sh['users']:
+            l = sh['users']
+            l[lname] = {'pw':generate_password_hash(password), 'id':'L'}
+            sh['users'] = l
+        else:
+            flash('name doppelt!!')
+    return redirect(url_for('home'))
+
+
 @app.route('/_auth/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
@@ -56,17 +81,20 @@ def login():
         password = request.form['password']
         sh = get_sh()
         users = sh['users']
-        print(users, request.form)
-        if username in users and check_password_hash(users[username], password):
+        print(users)
+
+        if username in users and check_password_hash(users[username]['pw'], password):
             currentUser = {}
             currentUser['username'] = request.form['username']
             session['user'] = currentUser
-    return redirect('/')
+        else:
+            flash('Name oder Passwort falsch!')
+    return redirect(url_for('home'))
     
 @app.route('/_auth/logout/')
 def logout():
     session.clear()
-    return redirect('/')
+    return redirect(url_for('home'))
 
 @app.route('/silben/')
 def silben():
@@ -77,6 +105,6 @@ def home():
     return render_template('silben.html')
 
 if __name__ == "__main__":
-    app.run()
+    app.run(port=3000)
 
 

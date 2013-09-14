@@ -9,25 +9,26 @@
 </style>
 
 <!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="/static/css/bootstrap.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
 <!-- Latest compiled and minified JavaScript -->
-<script src="/static/js/jquery-1.10.2.min.js"></script>
-<script src="/static/js/bootstrap.min.js"></script>
+<script src="{{ url_for('static', filename='js/jquery-1.10.2.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='silben.js') }}"></script>
 </head>
 
 <body>
 <nav class="navbar navbar-default" role="navigation">
     <div class="navbar-header">
-        <a class="navbar-brand" href="/">Silben Lesen</a>
+        <a class="navbar-brand" href="{{url_for('home')}}">Silben Lesen</a>
     </div>
     <div class="container">
-        <form class="form-inline navbar-form navbar-right" role="form" method="POST" action="/_auth/login">
+        <form class="form-inline navbar-form navbar-right" role="form" method="POST" action="{{url_for('login')}}">
             {%if g.user %}
             <div class="form-group">
-                Hallo {{g.user.username}}
+                {{g.user.username}}
             </div>
             <div class="form-group">
-                <a href="/_auth/logout/" class="btn btn-default">Abmelden</a>
+                <a href="{{url_for('logout')}}" class="btn btn-default">Abmelden</a>
             </div>
             {%else%}
             <div class="form-group">
@@ -43,64 +44,75 @@
         </form>
     </div>
 </nav>
-
+<div class="col-sm-12 col-md-6 col-lg-4">
+    {% if g.user.username == 'admin' %}
+    <h4> {{ g.user.username }} </h4>
+    <form class="form-inline navbar-form navbar-right" role="form" method="POST" action="{{url_for('addT')}}">
+        <table class="table">
+            {% for k,v in g._shelve['users'].items() if v['id']=='L' %}
+                <tr> 
+                    <td> {{k}}</td>
+                    <td> <a href="{{ url_for('delT',name=usr) }}" class='btn btn-danger'>X</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+        <div class="form-group">
+            <input id="" type="text" class="form-control" name="lname" placeholder="Lehrer">
+        </div>
+        <div class="form-group">
+            <input type="password" class="form-control" name="password" placeholder="passwort">
+        </div>
+        <button type="submit" id="submit" action="." class="btn btn-default">Lehrer Hinzufuegen</button>
+    </form>
+    {% endif %}
+    {% if g.user.lehrer %}
+    Kinderliste
+    <ul class="list-group">
+        <li class="list-group-item">
+            <span class="badge">14</span>
+            Hans
+        </li>
+        <li class="list-group-item">
+            <span class="badge">3</span>
+            Sepp 
+        </li>
+    </ul>
+    {% endif %}
+</div>
 <div id="diesilben" class="container">
     <!-- Stack the columns on mobile by making one full-width and the other half-width -->
 </div>
+<div>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <ul class=flashes>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+{% endwith %}
+</div>
+
 <script>
 var silbCnt = 0;
 var nr = 5;
 var silben = [{% for silb in g.silben%}'{{silb}}',{% endfor%}];
-
-function shuffle(array) {
-    var m = array.length, t, i;
-    // While there remain elements to shuffle…
-    while (m) {
-        // Pick a remaining element…
-        i = Math.floor(Math.random() * m--);
-        // And swap it with the current element.
-        t = array[m];
-        array[m] = array[i];
-        array[i] = t;
-    }
-    return array;
-} 
-
-function showSilben(silbCnt) {
-    pre = ''+
-        '<div class="col-xs-6 col-md-4 silbe">'+
-        '<div class="btn btn-info jumbotron"> <h1 class="text-center">';
-    post = '</h1J></div></div>';
-    var s = ''
-        for (var i = 0, item; item = Silb[i++];) {
-            s+= pre;
-            s+= item;
-            s+= post;
-        }
-    //var silStr = Silb.join(pre+post);
-    $("#diesilben").html(s);
-}
-
-function start() {
-    silbCnt = 0;
-    Silb = silben.slice(silbCnt,silbCnt+nr);
-    showSilben(Silb);
-}
 
 $(function() {
         silben = shuffle(silben);
         $("#diesilben").click(function(){
             silbCnt += nr;
             Silb = silben.slice(silbCnt,silbCnt+nr);
-            console.log(Silb);
+            //console.log(Silb);
             if (Silb.length) {
                 showSilben(Silb);
             } else {
-                alert('finish');
+                //alert('finish');
                 location.reload();
             }
         });
-        start();
+        //start();
 });
 </script>
 </body>
