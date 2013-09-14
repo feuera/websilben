@@ -1,0 +1,107 @@
+<!doctype html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>silbent</title>
+
+<style type="text/css">
+//.silbe {background: blue; };
+</style>
+
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="/static/css/bootstrap.min.css">
+<!-- Latest compiled and minified JavaScript -->
+<script src="/static/js/jquery-1.10.2.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+<nav class="navbar navbar-default" role="navigation">
+    <div class="navbar-header">
+        <a class="navbar-brand" href="/">Silben Lesen</a>
+    </div>
+    <div class="container">
+        <form class="form-inline navbar-form navbar-right" role="form" method="POST" action="/_auth/login">
+            {%if g.user %}
+            <div class="form-group">
+                Hallo {{g.user.username}}
+            </div>
+            <div class="form-group">
+                <a href="/_auth/logout/" class="btn btn-default">Abmelden</a>
+            </div>
+            {%else%}
+            <div class="form-group">
+                <label class="sr-only" for="login-username">Wer bist du</label>
+                <input id="focusedInput" type="text" class="form-control" name="username" placeholder="wer bist du?">
+            </div>
+            <div class="form-group">
+                <label class="sr-only" for="login-password">Passwort</label>
+                <input type="password" class="form-control" name="password" placeholder="passwort">
+            </div>
+            <button type="submit" id="submit" action="." class="btn btn-default">Anmelden</button>
+            {% endif %}
+        </form>
+    </div>
+</nav>
+
+<div id="diesilben" class="container">
+    <!-- Stack the columns on mobile by making one full-width and the other half-width -->
+</div>
+<script>
+var silbCnt = 0;
+var nr = 5;
+var silben = [{% for silb in g.silben%}'{{silb}}',{% endfor%}];
+
+function shuffle(array) {
+    var m = array.length, t, i;
+    // While there remain elements to shuffle…
+    while (m) {
+        // Pick a remaining element…
+        i = Math.floor(Math.random() * m--);
+        // And swap it with the current element.
+        t = array[m];
+        array[m] = array[i];
+        array[i] = t;
+    }
+    return array;
+} 
+
+function showSilben(silbCnt) {
+    pre = ''+
+        '<div class="col-xs-6 col-md-4 silbe">'+
+        '<div class="btn btn-info jumbotron"> <h1 class="text-center">';
+    post = '</h1J></div></div>';
+    var s = ''
+        for (var i = 0, item; item = Silb[i++];) {
+            s+= pre;
+            s+= item;
+            s+= post;
+        }
+    //var silStr = Silb.join(pre+post);
+    $("#diesilben").html(s);
+}
+
+function start() {
+    silbCnt = 0;
+    Silb = silben.slice(silbCnt,silbCnt+nr);
+    showSilben(Silb);
+}
+
+$(function() {
+        silben = shuffle(silben);
+        $("#diesilben").click(function(){
+            silbCnt += nr;
+            Silb = silben.slice(silbCnt,silbCnt+nr);
+            console.log(Silb);
+            if (Silb.length) {
+                showSilben(Silb);
+            } else {
+                alert('finish');
+                location.reload();
+            }
+        });
+        start();
+});
+</script>
+</body>
+
