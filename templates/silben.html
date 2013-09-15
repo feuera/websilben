@@ -44,25 +44,38 @@
         </form>
     </div>
 </nav>
+{% if g.user and g.user.id < 2  %}
 <div class="col-sm-12 col-md-6 col-lg-4">
-    {% if g.user.username == 'admin' %}
     <h4> {{ g.user.username }} </h4>
     <form class="form-inline navbar-form navbar-right" role="form" method="POST" action="{{url_for('addT')}}">
         <table class="table">
-            {% for k,v in g._shelve['users'].items() if v['id']=='L' %}
+            <tr>
+                <th> Name </th>
+                <th> Level 1</th>
+                <th> </th>
+                <th> Loeschen </th>
+            </tr>
+            {% for k,v in g._shelve['users'].items() if v['id'] > g.user.id %}
                 <tr> 
                     <td> {{k}}</td>
-                    <td> <a href="{{ url_for('delT',name=usr) }}" class='btn btn-danger'>X</a></td>
+                    {% if v['id']==2 %}
+                    <td> {{v['times']|count}}</td>
+                    <td> 
+                        <!-- Button trigger modal -->
+                        <a data-toggle="modal" href="#myModal" class="btn btn-default btn-sm">Zeige Info</a>
+                    </td>
+                    {% endif %}
+                    <td> <a href="{{ url_for('delT',name=k) }}" class='btn btn-danger btn-sm'>X</a></td>
                 </tr>
             {% endfor %}
         </table>
         <div class="form-group">
-            <input id="" type="text" class="form-control" name="lname" placeholder="Lehrer">
+            <input id="" type="text" class="form-control" name="lname" placeholder="{{ 'Kind' if g.user.id==1 else 'Lehrer' }} ">
         </div>
         <div class="form-group">
             <input type="password" class="form-control" name="password" placeholder="passwort">
         </div>
-        <button type="submit" id="submit" action="." class="btn btn-default">Lehrer Hinzufuegen</button>
+        <button type="submit" id="submit" action="." class="btn btn-default">Hinzufuegen</button>
     </form>
     {% endif %}
     {% if g.user.lehrer %}
@@ -77,8 +90,11 @@
             Sepp 
         </li>
     </ul>
-    {% endif %}
 </div>
+{% endif %}
+<!--<div id="thetable" class="container">-->
+    <!-- Stack the columns on mobile by making one full-width and the other half-width -->
+<!--</div>-->
 <div id="diesilben" class="container">
     <!-- Stack the columns on mobile by making one full-width and the other half-width -->
 </div>
@@ -94,11 +110,28 @@
 {% endwith %}
 </div>
 
+  <!-- Modal -->
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Modal title</h4>
+        </div>
+        <div class="modal-body">
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 <script>
 var silbCnt = 0;
 var nr = 5;
 var silben = [{% for silb in g.silben%}'{{silb}}',{% endfor%}];
-
+var stDate;
 $(function() {
         silben = shuffle(silben);
         $("#diesilben").click(function(){
@@ -108,11 +141,22 @@ $(function() {
             if (Silb.length) {
                 showSilben(Silb);
             } else {
-                //alert('finish');
-                location.reload();
+                var d = new Date();
+                var t = Math.ceil((d-stDate)/1000);
+                $.get("{{url_for('finish')}}", {ti: t}, function() {
+                    location.reload();
+                    });
             }
         });
-        //start();
+        {% if g.user.id == 2  %}
+        $.get("{{url_for('getTimes')}}", function(data){
+            $("#diesilben").html(data);
+            $("#asdf").click(function() {
+                stDate = new Date();
+                start();
+                });
+            });
+        {% endif %}
 });
 </script>
 </body>

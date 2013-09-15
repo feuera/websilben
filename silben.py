@@ -34,7 +34,7 @@ def get_sh():
     if sh is None:
         sh = g._shelve = shelve.open('config.db')
         if not 'users' in sh:
-            admin = {'admin':{'pw':generate_password_hash('admin'), 'id':'A'}}
+            admin = {'admin':{'pw':generate_password_hash('admin'), 'id':0}}
             sh['users'] = admin
             print('add user',sh['users'])
         #if not 'silben' in sh: #test for new silben
@@ -67,7 +67,10 @@ def addT():
         sh = get_sh()
         if lname and not lname in sh['users']:
             l = sh['users']
-            l[lname] = {'pw':generate_password_hash(password), 'id':'L'}
+            if g.user['id'] == 0:
+                l[lname] = {'pw':generate_password_hash(password), 'id':1, 'times':[]}
+            else:
+                l[lname] = {'pw':generate_password_hash(password), 'id':2, 'times':[]}
             sh['users'] = l
         else:
             flash('name doppelt!!')
@@ -86,6 +89,7 @@ def login():
         if username in users and check_password_hash(users[username]['pw'], password):
             currentUser = {}
             currentUser['username'] = request.form['username']
+            currentUser['id'] = users[username]['id']
             session['user'] = currentUser
         else:
             flash('Name oder Passwort falsch!')
@@ -95,6 +99,30 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('home'))
+
+from datetime import datetime
+@app.route('/finish')
+def finish():
+    utime = request.args.get('ti',0,type=int)
+    sh = get_sh()
+    users = sh['users']
+    user = users[g.user['username']]
+    if not 'times' in user:
+        user['times'] = [] #[datetime.now()]
+        print("add times to user")
+    user['times'].append((datetime.now(), utime))
+    users[g.user['username']] = user
+    sh['users'] = users
+    print(users)
+    return ''
+
+@app.route("/getTimes/")
+def getTimes():
+    print('get times')
+    sh = get_sh()
+    user = sh['users'][g.user['username']]
+    #print(user)
+    return render_template('table.html', times=user['times'])
 
 @app.route('/silben/')
 def silben():

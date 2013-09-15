@@ -17,15 +17,14 @@ function shuffle(array) {
 function showSilben(silbCnt) {
     pre = ''+
         '<div class="col-xs-6 col-md-4 silbe">'+
-        '<div class="btn btn-info jumbotron"> <h1 class="text-center">';
-    post = '</h1J></div></div>';
+        '<div id="jumbo" class="btn btn-info jumbotron"> <h1 class="text-center">';
+    post = '</h1></div></div>';
     var s = ''
         for (var i = 0, item; item = Silb[i++];) {
             s+= pre;
             s+= item;
             s+= post;
         }
-    //var silStr = Silb.join(pre+post);
     $("#diesilben").html(s);
 }
 
