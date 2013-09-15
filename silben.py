@@ -133,6 +133,7 @@ def home():
     return render_template('silben.html')
 
 if __name__ == "__main__":
-    app.run(port=3000)
+    #app.run(port=3000)
+    app.run()
 
 
