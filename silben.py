@@ -124,9 +124,9 @@ def getTimes():
     #print(user)
     return render_template('table.html', times=user['times'])
 
-@app.route('/silben/')
-def silben():
-    return 'silben'
+#@app.route('/silben/')
+#def silben():
+    #return 'silben'
 
 @app.route("/")#, methods=['GET','POST'])
 def home():
