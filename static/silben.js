@@ -11,6 +11,7 @@ function shuffle(array) {
         array[m] = array[i];
         array[i] = t;
     }
+    console.log(array);
     return array;
 } 
 
