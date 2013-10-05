@@ -46,7 +46,7 @@ def get_current_user():
 
 def get_db():
     db = getattr(g, '_shelve', None)
-    print('get db')
+    #print('get db')
     if db is None:
         uri = 'mongodb://silbenUser_:silbenPwd_@ds027668.mongolab.com:27668/silben'
         conn = pymongo.MongoClient(uri)
@@ -74,13 +74,21 @@ def teardown_sh(exception):
     if sh is not None:
         sh.close()
 
+def updateSession(user):
+    db = get_db()
+    usr = db.users.find_one({'username':user})
+    childs = {x['username']:1 for x in db.users.find({'parent':user}) if x}
+    print(childs)
+    session['user'] = {'username':user, 
+            'parent':usr['parent'],
+            'childs':childs,
+            }
+
 @app.route('/_auth/delT/<name>/')
 def delT(name):
-    sh = get_db()
-    if name in sh['users'] and name != 'admin':
-        l = sh['users']
-        l.pop(name)
-        sh['users'] = l
+    db = get_db()
+    db.users.remove({'username':name})
+    updateSession(g.user['username'])
     return redirect(url_for('home'))
 
 @app.route('/_auth/addT/', methods=['GET','POST'])
@@ -89,13 +97,9 @@ def addT():
         lname = request.form['lname']
         password = request.form['password']
         db = get_db()
-        if lname and db.users.find_one({'username':lname}):
-            if g.user['id'] == 0:
-                db.users.insert({'username':lname,'pw':generate_password_hash(password), 'times':[]})
-                #l[lname] = {'pw':generate_password_hash(password), 'id':1, 'times':[]}
-            else:
-                db.users.insert({'username':lname,'pw':generate_password_hash(password), 'times':[]})
-                #l[lname] = {'pw':generate_password_hash(password), 'id':2, 'times':[]}
+        if lname and not db.users.find_one({'username':lname}) :
+            db.users.insert({'username':lname,'pw':generate_password_hash(password), 'times':[],'parent':g.user['username']})
+            updateSession(g.user['username'])
         else:
             flash('name doppelt!!')
     return redirect(url_for('home'))
@@ -108,18 +112,15 @@ def login():
         password = request.form['password']
         db = get_db()
         user = db.users.find_one({'username': request.form['username']})
-        #with db.users.find_one({'username':request.form['username']}) as user:
-        print(user, check_password_hash(user['pw'], password))
         if user:
+            print(user, check_password_hash(user['pw'], password))
             if check_password_hash(user['pw'], password):
-                session['user'] = user['username']
+                updateSession(request.form['username'])
             else:
                 flash('Name oder Passwort falsch!')
             return redirect(url_for('home'))
-        #if username in users and check_password_hash(users[username]['pw'], password):
-            #session['user'] = db.users.find_one({'username'
-        #else:
-            #flash('Name oder Passwort falsch!')
+        else:
+            flash('Name und oder Passwort falsch!')
     return redirect(url_for('home'))
     
 @app.route('/_auth/logout/')
@@ -130,6 +131,8 @@ def logout():
 from datetime import datetime
 @app.route('/finish')
 def finish():
+    if not g.user:
+        return ''
     utime = request.args.get('ti',0,type=int)
     times = session.get('times')
     if not times:
@@ -138,7 +141,7 @@ def finish():
     session['times'] = times
     sh = get_db()
     users = sh['users']
-    user = users.find_one({'username':g.user})
+    user = users.find_one({'username':g.user['username']})
     if not user:
         return ''
     if not 'times' in user:
@@ -151,7 +154,9 @@ def finish():
 @app.route("/getTimes/")
 def getTimes():
     sh = get_db()
-    user = sh['users'].find_one({'username':g.user})
+    if not g.user:
+        return render_template('table.html')
+    user = sh.users.find_one({'username':g.user['username']})
     if not user and session.get('times'):
         return render_template('table.html', times=session['times'])
     if 'times' in user:

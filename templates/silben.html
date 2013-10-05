@@ -25,7 +25,7 @@
         <form class="form-inline navbar-form navbar-right" role="form" method="POST" action="{{url_for('login')}}">
             {%if g.user %}
             <div class="form-group">
-                {{g.user}}
+                {{g.user.username}}
             </div>
             <div class="form-group">
                 <a href="{{url_for('logout')}}" class="btn btn-default">Abmelden</a>
@@ -44,25 +44,35 @@
         </form>
     </div>
 </nav>
-<!--<div class="col-sm-12 col-md-6 col-lg-4">-->
-    <!--<h4> A{{ g.user.username }} </h4>-->
-    <!--<form class="form-inline navbar-form navbar-right" role="form" method="POST" action="{{url_for('addT')}}">-->
-        <!--<table class="table">-->
-            <!--<tr>-->
-                <!--<th> Name </th>-->
-                <!--<th> Level 1</th>-->
-                <!--<th> </th>-->
-                <!--<th> Loeschen </th>-->
-            <!--</tr>-->
-        <!--</table>-->
-        <!--<div class="form-group">-->
-            <!--<input id="" type="text" class="form-control" name="lname" placeholder="user">-->
-        <!--</div>-->
-        <!--<div class="form-group">-->
-            <!--<input type="password" class="form-control" name="password" placeholder="passwort">-->
-        <!--</div>-->
-        <!--<button type="submit" id="submit" action="." class="btn btn-default">Hinzufuegen</button>-->
-    <!--</form>-->
+<div class="col-sm-12 col-md-6 col-lg-4">
+    {% if g.user.username == 'admin' or g.user.parent == 'admin' %}
+    <h4> {{ g.user.username }} </h4>
+    <form class="form-inline navbar-form navbar-right" role="form" method="POST" action="{{url_for('addT')}}">
+        <table class="table">
+            <tr>
+                <th> Name </th>
+                <th> Level 1</th>
+                <th> </th>
+                <th> Loeschen </th>
+            </tr>
+            {% for name,level in g.user.childs.items() %}
+            <tr>
+                <td> {{name}} </td>
+                <td> {{level}} </td>
+                <td> </td>
+                <td> <a href="{{ url_for('delT',name=name) }}" class="btn btn-danger">X</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+        <div class="form-group">
+            <input id="" type="text" class="form-control" name="lname" placeholder="user">
+        </div>
+        <div class="form-group">
+            <input type="password" class="form-control" name="password" placeholder="passwort">
+        </div>
+        <button type="submit" id="submit" action="." class="btn btn-default">Hinzufuegen</button>
+    </form>
+    {% endif %}
     <!--Kinderliste-->
     <!--<ul class="list-group">-->
         <!--<li class="list-group-item">-->
@@ -74,7 +84,7 @@
             <!--Sepp -->
         <!--</li>-->
     <!--</ul>-->
-<!--</div>-->
+</div>
 <div id="diesilben" class="container">
     <!-- Stack the columns on mobile by making one full-width and the other half-width -->
 </div>
@@ -128,7 +138,7 @@ $(function() {
                     });
             }
         });
-        {% if g.user %}
+        {% if g.user['parent'] != 'admin' and g.user['username'] != 'admin' %}
         $.get("{{url_for('getTimes')}}", function(data){
             $("#diesilben").html(data);
             $("#asdf").click(function() {
@@ -136,8 +146,6 @@ $(function() {
                 start();
                 });
             });
-        {% else %}
-            start();
         {% endif %}
 });
 </script>
