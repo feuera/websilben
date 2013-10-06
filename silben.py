@@ -30,6 +30,13 @@ def getSilben():
     print('silben: ',silben)
     return silben
 
+def getStufen():
+    db = get_db()
+    print(db)
+    stufen = db.stufen.find()
+    stufeD = { x['stufe']:x['silben'] for x in stufen}
+    return stufeD
+
 @app.before_request
 def get_current_user():
     g.user = None
@@ -41,8 +48,11 @@ def get_current_user():
         silben = getSilben()
         session['silben'] = silben
     g.silben = silben
-
-
+    stufen = session.get('stufen')
+    if not stufen:
+        stufen = getStufen()
+        session['stufen'] = stufen
+    g.stufen = session.get('stufen')
 
 def get_db():
     db = getattr(g, '_shelve', None)
@@ -77,7 +87,7 @@ def teardown_sh(exception):
 def updateSession(user):
     db = get_db()
     usr = db.users.find_one({'username':user})
-    childs = {x['username']:1 for x in db.users.find({'parent':user}) if x}
+    childs = {x['username']:{'level':1, 'times':x['times']} for x in db.users.find({'parent':user}) if x}
     print(childs)
     session['user'] = {'username':user, 
             'parent':usr['parent'],
@@ -89,6 +99,31 @@ def delT(name):
     db = get_db()
     db.users.remove({'username':name})
     updateSession(g.user['username'])
+    return redirect(url_for('home'))
+
+@app.route('/addN/', methods=['GET','POST'])
+def addN():
+    if request.method == 'POST':
+        stufe = request.form['stufenName'].replace(' ','_')
+        silben = request.form['silben'].split('\n')
+        #stufeD = {stufe: silben}
+        db = get_db()
+        print(list(db.stufen.find({'stufe':stufe})))
+        if (list(db.stufen.find({'stufe':stufe}))):
+            flash("stufe existiert bereits")
+        else:
+            db.stufen.insert({'stufe':stufe, 'silben':silben})
+    return redirect(url_for('home'))
+
+@app.route('/delS/<stufe>')#, methods=['GET','POST'])
+def delS(stufe):
+    return redirect(url_for('home'))
+
+@app.route('/addS/', methods=['GET','POST'])
+def addS():
+    if request.method == 'POST':
+        silbs = request.form['silben'].split('\n')
+        print(silbs)
     return redirect(url_for('home'))
 
 @app.route('/_auth/addT/', methods=['GET','POST'])

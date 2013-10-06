@@ -4,9 +4,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>silbent</title>
 
-<style type="text/css">
-//.silbe {background: blue; };
-</style>
 
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
@@ -14,22 +11,34 @@
 <script src="{{ url_for('static', filename='js/jquery-1.10.2.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 <script src="{{ url_for('static', filename='silben.js') }}"></script>
+
+<style type="text/css">
+    body { padding-top: 70px; }
+</style>
 </head>
 
 <body>
-<nav class="navbar navbar-default" role="navigation">
+<nav id="navbar-spy" class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="navbar-header">
         <a class="navbar-brand" href="{{url_for('home')}}">Silben Lesen</a>
     </div>
-    <div class="container">
+    <div class="collapse navbar-collapse navbar-ex1-collapse">
+        {% if g.user.parent == 'admin' %}
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="#kinder">Kinder</a></li>
+            <li class=""><a href="#lesestufen">Lesestufen</a></li>
+        </ul>
+        {% endif %}
+    <!--<div class="container">-->
         <form class="form-inline navbar-form navbar-right" role="form" method="POST" action="{{url_for('login')}}">
             {%if g.user %}
+            <!--<p class="navbar-text pull-right">Signed in as <a href="#" class="navbar-link">Mark Otto</a></p>-->
             <div class="form-group">
-                {{g.user.username}}
+                {{g.user.username}} 
             </div>
             <div class="form-group">
                 <a href="{{url_for('logout')}}" class="btn btn-default">Abmelden</a>
-            </div>
+            <!--</div>-->
             {%else%}
             <div class="form-group">
                 <label class="sr-only" for="login-username">Wer bist du</label>
@@ -42,28 +51,52 @@
             <button type="submit" id="submit" action="." class="btn btn-default">Anmelden</button>
             {% endif %}
         </form>
+    <!--</div>-->
     </div>
 </nav>
-<div class="col-sm-12 col-md-6 col-lg-4">
-    {% if g.user.username == 'admin' or g.user.parent == 'admin' %}
-    <h4> {{ g.user.username }} </h4>
-    <form class="form-inline navbar-form navbar-right" role="form" method="POST" action="{{url_for('addT')}}">
+{% if g.user.username == 'admin' or g.user.parent == 'admin' %}
+<div data-target="#navbar-spy" data-spy="scroll">
+<div class="col-sm-12 col-md-8 col-lg-8" >
+    <h4 id="kinder"> Kinder </h4>
+    <form class="form-inline navbar-form" role="form" method="POST" action="{{url_for('addT')}}">
         <table class="table">
             <tr>
-                <th> Name </th>
-                <th> Level 1</th>
-                <th> </th>
-                <th> Loeschen </th>
+                <th class="col-md-1"> Name </th>
+                <th class="col-md-2 col-lg-2">Lesestufe</th>
+                <th class="col-md-6 col-lg-5"># Uebungen</th>
+                <th class="col-md-1"> Loeschen </th>
             </tr>
-            {% for name,level in g.user.childs.items() %}
+            {% for name,info in g.user.childs.items() %}
             <tr>
                 <td> {{name}} </td>
-                <td> {{level}} </td>
                 <td> </td>
+                <td> 
+                    <button type="button" class="btn " data-toggle="collapse" data-target="#demo{{name}}">
+                        {{ info.times|count }}
+                    </button>
+                    <div id="demo{{name}}" class="collapse">
+                        <table class="table">
+                            <tr> 
+                                <th>Level</th>
+                                <th>Wann</th>
+                                <th>Zeit [s]</th>
+                            </tr> 
+                            {% for t in info.times %}
+                            <tr> 
+                                <td> 1 </td>
+                                <td> {{t[0].strftime('%Y-%m-%d %H:%M')}}</td>
+                                <td> {{t[1]}} </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </td>
+                    <!--{{info.level}} </td>-->
                 <td> <a href="{{ url_for('delT',name=name) }}" class="btn btn-danger">X</a></td>
             </tr>
             {% endfor %}
         </table>
+
         <div class="form-group">
             <input id="" type="text" class="form-control" name="lname" placeholder="user">
         </div>
@@ -72,19 +105,51 @@
         </div>
         <button type="submit" id="submit" action="." class="btn btn-default">Hinzufuegen</button>
     </form>
-    {% endif %}
-    <!--Kinderliste-->
-    <!--<ul class="list-group">-->
-        <!--<li class="list-group-item">-->
-            <!--<span class="badge">14</span>-->
-            <!--Hans-->
-        <!--</li>-->
-        <!--<li class="list-group-item">-->
-            <!--<span class="badge">3</span>-->
-            <!--Sepp -->
-        <!--</li>-->
-    <!--</ul>-->
 </div>
+<br>
+<br>
+<br>
+<br>
+<div class="col-sm-12 col-md-8 col-lg-8">
+    <h4 id="lesestufen">Lesestufen</h4>
+    {% for stufe,silben in g.stufen.items() %}
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                        <!--<div class="col-md-4">-->
+                            <a class="btn btn-primary" data-toggle="collapse" data-parent="#accordion" 
+                                href="#collapseOne"> {{ stufe }} </a> (eine Silbe pro Zeile)
+                        <!--</div>-->
+                        <a class="btn btn-danger pull-right" href="{{url_for('delS', stufe=stufe)}}">X</a>
+                </h4>
+            </div>
+            <div id="collapseOne" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <form class="" role="form" method="POST" action="{{url_for('addS')}}">
+                        <textarea class="form-control" name="silben" rows=15>{{ silben|join('\n') }}</textarea>
+                        <button type="submit" id="submit" action="." class="btn btn-default">Speichern</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    <h4>Lesestufe anlegen</h4>
+    <div class="col-md-8 col-lg-8">
+        <form class="form-inline" role="form" method="POST" action="{{url_for('addN')}}">
+            <div class="col-md-4">
+                <input class="form-control" name="stufenName" placeholder="Stufenname"></input>
+                <textarea class="form-control" name="silben" rows=15 placeholder="Silben (eine Silbe pro Zeile)"></textarea>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" id="submit" action="." class="btn btn-default form-control">Anlegen</button>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+{% endif %}
 <div id="diesilben" class="container">
     <!-- Stack the columns on mobile by making one full-width and the other half-width -->
 </div>
@@ -100,23 +165,6 @@
 {% endwith %}
 </div>
 
-  <!-- Modal -->
-  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title">Modal title</h4>
-        </div>
-        <div class="modal-body">
-
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        </div>
-      </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-  </div><!-- /.modal -->
 <script>
 var silbCnt = 0;
 var nr = 5;
