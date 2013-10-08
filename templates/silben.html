@@ -118,8 +118,8 @@
             <div class="panel-heading">
                 <h4 class="panel-title">
                         <!--<div class="col-md-4">-->
-                            <a class="btn btn-primary" data-toggle="collapse" data-parent="#accordion" 
-                                href="#collapseOne"> {{ stufe }} </a> (eine Silbe pro Zeile)
+                            <a class="btn btn-success" data-toggle="collapse" data-parent="#accordion" 
+                                href="#collapseOne"> {{ stufe }} </a> 
                         <!--</div>-->
                         <a class="btn btn-danger pull-right" href="{{url_for('delS', stufe=stufe)}}">X</a>
                 </h4>
@@ -127,25 +127,41 @@
             <div id="collapseOne" class="panel-collapse collapse">
                 <div class="panel-body">
                     <form class="" role="form" method="POST" action="{{url_for('addS')}}">
-                        <textarea class="form-control" name="silben" rows=15>{{ silben|join('\n') }}</textarea>
-                        <button type="submit" id="submit" action="." class="btn btn-default">Speichern</button>
+                        <div class="col-md-4">
+                            <textarea class="form-control" name="silben" rows=15>{{ silben|join('\n') }}</textarea>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" id="submit" action="." class="btn btn-default">Speichern</button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
     {% endfor %}
-    <h4>Lesestufe anlegen</h4>
-    <div class="col-md-8 col-lg-8">
-        <form class="form-inline" role="form" method="POST" action="{{url_for('addN')}}">
-            <div class="col-md-4">
-                <input class="form-control" name="stufenName" placeholder="Stufenname"></input>
-                <textarea class="form-control" name="silben" rows=15 placeholder="Silben (eine Silbe pro Zeile)"></textarea>
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="btn btn-default" data-toggle="collapse" data-parent="#accordion" 
+                        href="#collapseAnlegen"> Lesestufe anlegen</a>
+                </h4>
+                <!--<div class="col-md-8 col-lg-8">-->
             </div>
-            <div class="col-md-3">
-                <button type="submit" id="submit" action="." class="btn btn-default form-control">Anlegen</button>
+            <div id="collapseAnlegen" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <form class="form-inline" role="form" method="POST" action="{{url_for('addN')}}">
+                        <div class="col-md-4">
+                            <input class="form-control" name="stufenName" placeholder="Stufenname"></input>
+                            <textarea class="form-control" name="silben" rows=15 placeholder="Silben (eine Silbe pro Zeile)"></textarea>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" id="submit" action="." class="btn btn-default form-control">Anlegen</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 </div>
