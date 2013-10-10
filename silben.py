@@ -3,6 +3,7 @@
 from flask import Flask, request, render_template, g, redirect, session, url_for, flash
 import shelve
 import pymongo
+import os
 
 #conn = pymongo.MongoClient('mongodb://silbenUser_:silbenPwd_@ds027668.mongolab.com:27668/silben')
 #uri_parts = pymongo.uri_parser.parse_uri('mongodb://silbenUser_:silbenPwd_@ds027668.mongolab.com:27668/silben')
@@ -48,23 +49,21 @@ def get_current_user():
         silben = getSilben()
         session['silben'] = silben
     g.silben = silben
-    stufen = session.get('stufen')
-    if not stufen:
-        stufen = getStufen()
-        session['stufen'] = stufen
-    g.stufen = session.get('stufen')
+    g.stufen = session['stufen'] = getStufen()
 
 def get_db():
     db = getattr(g, '_shelve', None)
     #print('get db')
     if db is None:
-        uri = 'mongodb://silbenUser_:silbenPwd_@ds027668.mongolab.com:27668/silben'
+        #uri = 'mongodb://silbenUser_:silbenPwd_@ds027668.mongolab.com:27668/silben'
+        uri = os.environ['MONGO_DATABASE']
+        print('connecting to ',uri)
         conn = pymongo.MongoClient(uri)
-        uri_parts = pymongo.uri_parser.parse_uri(uri)
-        db = conn[uri_parts['database']]
+        #uri_parts = pymongo.uri_parser.parse_uri(uri)
+        db = conn.silben
         #db = g._shelve = shelve.open('config.db')
         if not 'users' in db.collection_names():
-            admin = {'username':'admin','pw':generate_password_hash('admin'), 'id':0}
+            admin = {'username':'admin','pw':generate_password_hash('admin'), 'id':0, 'parent':None}
             users = db.users
             users.insert(admin)
             #db['users'] = admin
@@ -117,6 +116,8 @@ def addN():
 
 @app.route('/delS/<stufe>')#, methods=['GET','POST'])
 def delS(stufe):
+    db = get_db()
+    db.stufen.remove({'stufe':stufe}) 
     return redirect(url_for('home'))
 
 @app.route('/addS/', methods=['GET','POST'])

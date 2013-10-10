@@ -62,14 +62,22 @@
         <table class="table">
             <tr>
                 <th class="col-md-1"> Name </th>
-                <th class="col-md-2 col-lg-2">Lesestufe</th>
+                <th class="col-md-2 col-lg-2">
+                    Lesestufe
+                </th>
                 <th class="col-md-6 col-lg-5"># Uebungen</th>
                 <th class="col-md-1"> Loeschen </th>
             </tr>
             {% for name,info in g.user.childs.items() %}
             <tr>
                 <td> {{name}} </td>
-                <td> </td>
+                <td> 
+                    <select class="form-control">
+                        {% for stufe in g.stufen.keys() %}
+                        <option>{{stufe}}</option>
+                        {% endfor %}
+                    </select>
+                </td>
                 <td> 
                     <button type="button" class="btn " data-toggle="collapse" data-target="#demo{{name}}">
                         {{ info.times|count }}
@@ -119,12 +127,12 @@
                 <h4 class="panel-title">
                         <!--<div class="col-md-4">-->
                             <a class="btn btn-success" data-toggle="collapse" data-parent="#accordion" 
-                                href="#collapseOne"> {{ stufe }} </a> 
+                                href="#collapse{{stufe}}"> {{ stufe }} </a> 
                         <!--</div>-->
                         <a class="btn btn-danger pull-right" href="{{url_for('delS', stufe=stufe)}}">X</a>
                 </h4>
             </div>
-            <div id="collapseOne" class="panel-collapse collapse">
+            <div id="collapse{{stufe}}" class="panel-collapse collapse">
                 <div class="panel-body">
                     <form class="" role="form" method="POST" action="{{url_for('addS')}}">
                         <div class="col-md-4">
