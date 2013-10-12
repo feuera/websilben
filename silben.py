@@ -36,6 +36,7 @@ def getStufen():
     print(db)
     stufen = db.stufen.find()
     stufeD = { x['stufe']:x['silben'] for x in stufen}
+    print('stufeD:', stufeD)
     return stufeD
 
 @app.before_request
@@ -50,6 +51,7 @@ def get_current_user():
         session['silben'] = silben
     g.silben = silben
     g.stufen = session['stufen'] = getStufen()
+    print('stufen: ', g.stufen)
 
 def get_db():
     db = getattr(g, '_shelve', None)
@@ -86,12 +88,14 @@ def teardown_sh(exception):
 def updateSession(user):
     db = get_db()
     usr = db.users.find_one({'username':user})
-    childs = {x['username']:{'level':1, 'times':x['times']} for x in db.users.find({'parent':user}) if x}
-    print(childs)
+    childs = {x['username']:{'level':1, 'times':x['times'], 'stufe':x['stufe']} for x in db.users.find({'parent':user}) if x}
+    #print(childs)
     session['user'] = {'username':user, 
             'parent':usr['parent'],
             'childs':childs,
+            'stufe':usr['stufe'] if 'stufe' in usr.keys() else '',
             }
+    print(session['user'])
 
 @app.route('/_auth/delT/<name>/')
 def delT(name):
@@ -104,7 +108,7 @@ def delT(name):
 def addN():
     if request.method == 'POST':
         stufe = request.form['stufenName'].replace(' ','_')
-        silben = request.form['silben'].split('\n')
+        silben = [x.strip() for x in request.form['silben'].split('\n')]
         #stufeD = {stufe: silben}
         db = get_db()
         print(list(db.stufen.find({'stufe':stufe})))
@@ -123,7 +127,7 @@ def delS(stufe):
 @app.route('/addS/', methods=['GET','POST'])
 def addS():
     if request.method == 'POST':
-        silbs = request.form['silben'].split('\n')
+        silbs = [x.strip() for x in request.form['silben'].split('\n')]
         print(silbs)
     return redirect(url_for('home'))
 
@@ -163,6 +167,22 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for('home'))
+
+@app.route('/setStufe/')
+def setStufe():
+    if not g.user:
+        return ''
+    foruser = request.args.get('user','',type=str)
+    stufe = request.args.get('st','',type=str)
+    if foruser not in g.user['childs'].keys():
+        return ''
+    db = get_db()
+    usr = db.users.find_one({"username":foruser})
+    usr['stufe'] = stufe.strip()
+    db.users.update({"username":foruser}, usr)
+    updateSession(g.user['username'])
+    print(foruser, stufe, g.user['childs'].keys())
+    return ''
 
 from datetime import datetime
 @app.route('/finish')
