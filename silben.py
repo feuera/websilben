@@ -88,7 +88,7 @@ def teardown_sh(exception):
 def updateSession(user):
     db = get_db()
     usr = db.users.find_one({'username':user})
-    childs = {x['username']:{'level':1, 'times':x['times'], 'stufe':x['stufe']} for x in db.users.find({'parent':user}) if x}
+    childs = {x['username']:{'level':1, 'times':x['times'], 'stufe': x['stufe'] if 'stufe' in x else '' } for x in db.users.find({'parent':user}) if x}
     #print(childs)
     session['user'] = {'username':user, 
             'parent':usr['parent'],
