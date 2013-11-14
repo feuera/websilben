@@ -1,5 +1,11 @@
 
 
+function setCurStufe(name, stufe) {
+    //alert(name+stufe)
+    $.get("{{url_for('setStufe')}}", {user: name, st:stufe}, function(data){
+        alert("done");
+    });
+}
 
 function shuffle(array) {
     var m = array.length, t, i;
